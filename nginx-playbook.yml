@@ -1,0 +1,46 @@
+---
+- hosts: webapp
+  vars:
+    name: Mike
+
+  tasks:
+  - name: Install epel-release
+    yum:
+      name:
+        - epel-release
+      state: latest
+    become: True
+        
+  - name: Install nginx
+    yum:
+      name:
+        - nginx
+      state: latest
+    become: True
+
+  - name: copy Jupyter configuration with password
+    template:
+      src: templates/index.html.j2
+      dest: "/usr/share/nginx/html/index.html"
+      mode: u+rwx,g+rwx
+    become: True
+    become_user: root
+    notify: "restart nginx"
+
+
+  handlers:
+  - name: Enable nginx
+    systemd:
+      name: nginx
+      enabled: yes
+    become: True
+    become_user: root
+    listen: "restart nginx"
+        
+  - name: Start nginx
+    systemd:
+      name: nginx
+      state: restarted
+    become: True
+    become_user: root
+    listen: "restart nginx"
